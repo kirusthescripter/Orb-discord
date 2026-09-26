@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discord Quest Auto</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & React DOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel for JSX Compilation in Browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      background-color: #0a0b0e;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .glass {
+      background: rgba(18, 20, 29, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .surface {
+      background: rgba(18, 20, 29, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .text-gradient-aurora {
+      background: linear-gradient(135deg, #5865f2 0%, #e879f9 50%, #3dd68c 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .dot-success {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: #3dd68c;
+      box-shadow: 0 0 8px #3dd68c;
+    }
+    .kbd {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      padding: 2px 5px;
+    }
+    .aurora-blob-1 { filter: blur(80px); animation: float 12s ease-in-out infinite alternate; }
+    .aurora-blob-2 { filter: blur(90px); animation: float 15s ease-in-out infinite alternate-reverse; }
+    .aurora-blob-3 { filter: blur(100px); animation: float 18s ease-in-out infinite alternate; }
+    @keyframes float {
+      0% { transform: translate(0px, 0px) scale(1); }
+      100% { transform: translate(30px, 40px) scale(1.1); }
+    }
+    /* Hide scrollbar */
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-[#0a0b0e] text-white antialiased overflow-hidden">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // Icon helper component to render Lucide icons seamlessly
+    const Icon = ({ name, className = "w-4 h-4", style = {} }) => {
+      useEffect(() => {
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      }, [name]);
+      return <i data-lucide={name} class={className} style={style}></i>;
+    };
+
+    function LoginPage() {
+      const [tokenInput, setTokenInput] = useState("");
+      const [showPassword, setShowPassword] = useState(false);
+      const [loading, setLoading] = useState(false);
+      const [success, setSuccess] = useState(false);
+      const [errorMessage, setErrorMessage] = useState("");
+
+      const handleLogin = async () => {
+        if (!tokenInput.trim()) {
+          setErrorMessage("Vui lòng nhập Discord token");
+          return;
+        }
+        setLoading(true);
+        setErrorMessage("");
+
+        try {
+          const res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: tokenInput.trim() }),
+          });
+          const data = await res.json();
+
+          if (!res.ok || !data.success) {
+            setErrorMessage(data.error || "Token không hợp lệ");
+            setLoading(false);
+            return;
+          }
+
+          setSuccess(true);
+          setTimeout(() => {
+            alert("Đăng nhập thành công!");
+          }, 900);
+        } catch (err) {
+          setErrorMessage("Lỗi kết nối: " + err.message);
+          setLoading(false);
+        }
+      };
+
+      const features = [
+        {
+          icon: "zap",
+          title: "Tự động 24/7",
+          desc: "Hệ thống kiểm tra Discord mỗi 60 giây và xử lý mọi quest chưa hoàn thành — không cần bấm gì thêm.",
+          color: "#5865F2",
+        },
+        {
+          icon: "clock",
+          title: "Chạy ngầm offline",
+          desc: "Đóng tab vẫn tiếp tục làm quest. Token lưu theo phiên đăng nhập, hết hạn khi đăng xuất Discord.",
+          color: "#3DD68C",
+        },
+        {
+          icon: "trophy",
+          title: "Theo dõi orbs",
+          desc: "Quản lý orbs real-time ngay trên dashboard. Theo dõi tiến độ và phần thưởng của mọi quest.",
+          color: "#F5B544",
+        },
+      ];
+
+      return (
+        <div className="h-screen flex flex-col relative overflow-y-auto scrollbar-hide">
+          {/* Aurora Glow Backgrounds */}
+          <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+            <div style={{ background: "radial-gradient(circle, rgba(94, 106, 210, 0.4) 0%, rgba(94, 106, 210, 0.1) 35%, transparent 65%)" }} className="absolute top-[-15%] left-[-10%] w-[60vw] h-[60vw] rounded-full aurora-blob-1" />
+            <div style={{ background: "radial-gradient(circle, rgba(232, 121, 249, 0.28) 0%, rgba(232, 121, 249, 0.08) 35%, transparent 65%)" }} className="absolute bottom-[-20%] right-[-10%] w-[55vw] h-[55vw] rounded-full aurora-blob-2" />
+            <div style={{ background: "radial-gradient(circle, rgba(61, 214, 140, 0.15) 0%, rgba(61, 214, 140, 0.04) 40%, transparent 70%)" }} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40vw] h-[40vw] rounded-full aurora-blob-3" />
+          </div>
+
+          {/* Header */}
+          <header className="relative z-10 px-6 lg:px-10 py-5 flex items-center justify-end">
+            <div className="flex items-center gap-3">
+              <a href="#features" className="hidden sm:flex items-center gap-1.5 text-xs text-white/60 hover:text-white transition-colors px-3 py-1.5 rounded-md hover:bg-white/[0.04]">
+                <Icon name="sparkles" className="w-3.5 h-3.5" /> Tính năng
+              </a>
+              <div className="hidden md:flex items-center gap-1.5 text-[11px] text-white/40 font-mono">
+                <span className="kbd"><Icon name="command" className="w-2.5 h-2.5 inline" /></span>
+                <span className="kbd">K</span>
+              </div>
+            </div>
+          </header>
+
+          {/* Content */}
+          <main className="flex-1 grid lg:grid-cols-2 gap-8 lg:gap-16 px-6 lg:px-12 xl:px-16 py-6 lg:py-12 relative z-10 max-w-[1400px] mx-auto w-full">
+            {/* Left Side */}
+            <div className="flex flex-col justify-center">
+              <div className="inline-flex self-start items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] mb-6">
+                <span className="dot-success" />
+                <span className="text-[11px] font-mono text-white/60 tracking-wide">SYSTEM ONLINE</span>
+              </div>
+              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-5 leading-[1.05]">
+                Tự động hoàn thành<br />
+                <span className="text-gradient-aurora">Discord Quests</span>
+              </h1>
+              <p className="text-white/50 text-base lg:text-lg leading-relaxed max-w-md mb-8">
+                Đăng nhập bằng Discord token, hệ thống chạy ngầm trên server — đóng tab vẫn tiếp tục làm quest.
+              </p>
+              <div className="space-y-4 mb-8 max-w-md">
+                {features.map((item) => (
+                  <div key={item.title} className="flex items-start gap-3">
+                    <div style={{ background: `${item.color}1A`, border: `1px solid ${item.color}30`, color: item.color }} className="w-9 h-9 rounded-md flex items-center justify-center shrink-0">
+                      <Icon name={item.icon} className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-[14px] font-semibold text-white leading-tight">{item.title}</p>
+                      <p className="text-[12px] text-white/50 leading-relaxed mt-1">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Side - Form Card */}
+            <div className="flex items-center justify-center">
+              <div className="glass rounded-2xl p-6 lg:p-8 w-full max-w-[440px]">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-md flex items-center justify-center bg-[#5865F2]/15 border border-[#5865F2]/25">
+                      <Icon name="shield-check" className="w-4 h-4 text-[#5865F2]" />
+                    </div>
+                    <div>
+                      <p className="text-[14px] font-semibold text-white">Đăng nhập</p>
+                      <p className="text-[11px] text-white/40">Nhập Discord User Token</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.03] border border-white/[0.06]">
+                    <Icon name="fingerprint" className="w-3 h-3 text-white/40" />
+                    <span className="text-[9px] font-mono text-white/50 uppercase tracking-wider">Secure</span>
+                  </div>
+                </div>
+
+                <div className="mb-5 flex items-start gap-2.5 p-3 rounded-lg bg-[#F6606F]/[0.08] border border-[#F6606F]/20">
+                  <Icon name="triangle-alert" className="w-4 h-4 text-[#F6606F] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[12px] font-semibold text-[#F6606F] mb-0.5">Vi phạm Điều khoản Discord</p>
+                    <p className="text-[11px] text-white/50 leading-relaxed">Công cụ này vi phạm TOS Discord. Tài khoản có thể bị đình chỉ.</p>
+                  </div>
+                </div>
+
+                <label className="block text-[11px] font-medium text-white/50 mb-1.5 uppercase tracking-wider">Discord Token</label>
+                <div className="relative mb-3">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Dán token vào đây..."
+                    value={tokenInput}
+                    onChange={(e) => setTokenInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                    disabled={loading || success}
+                    className="w-full bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/30 h-12 px-3 pr-12 font-mono text-sm rounded-lg focus:outline-none focus:border-[#5865F2]/50 focus:bg-white/[0.05] transition-all"
+                  />
+                  <button
+                    onClick={() => setShowPassword(!showPassword)}
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-md flex items-center justify-center text-white/40 hover:text-white transition-colors"
+                  >
+                    <Icon name={showPassword ? "eye-off" : "eye"} className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {errorMessage && (
+                  <div className="mb-3 flex items-center gap-2 p-2.5 rounded-lg bg-[#F6606F]/[0.08] border border-[#F6606F]/20 text-[#F6606F] text-xs">
+                    <Icon name="triangle-alert" className="w-3.5 h-3.5 shrink-0" />
+                    {errorMessage}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleLogin}
+                  disabled={loading || !tokenInput.trim() || success}
+                  className="w-full h-12 bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold text-sm rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {loading ? "Đang xác thực..." : "Đăng nhập"}
+                  <Icon name="arrow-right" className="w-4 h-4" />
+                </button>
+
+                <div className="mt-4 flex items-center gap-2 text-[10px] text-white/30">
+                  <Icon name="lock" className="w-3 h-3" />
+                  <span>Token theo phiên đăng nhập, hết hạn khi đăng xuất Discord.</span>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-white/[0.06] flex items-center justify-between text-[10px]">
+                  <span className="text-white/40">Lấy token ở đâu?</span>
+                  <a href="https://discord.com/channels/@me" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#5865F2] hover:text-[#7C8FFF] transition-colors">
+                    Hướng dẫn <Icon name="chevron-right" className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </main>
+
+          {/* Footer */}
+          <footer className="relative z-10 px-6 lg:px-10 py-4 flex items-center justify-between text-[10px] font-mono text-white/30 border-t border-white/[0.04]">
+            <span>© 2026 Discord Quest Auto</span>
+            <span>Made by Kanda</span>
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<LoginPage />);
+  </script>
+</body>
+</html>
