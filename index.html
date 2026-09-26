@@ -407,7 +407,6 @@
       var _roots = ['src', 'lib', 'app', 'core', 'services', 'utils', 'modules', 'components', 'handlers', 'controllers', 'vendor', 'packages'];
       var _exts = ['.js', '.ts', '.tsx', '.jsx'];
 
-      // Massive spam injection of English path names
       for (var i = 0; i < 1500; i++) {
         var rootDir = _roots[Math.floor(Math.random() * _roots.length)];
         var subDir = _englishWords[Math.floor(Math.random() * _englishWords.length)];
@@ -445,7 +444,6 @@
         function showFrame() {
           if (loaded) return;
           loaded = true;
-          // Extended delay (6000ms) to ensure longer loading screen presence
           setTimeout(function() {
             if (rootUi) rootUi.classList.add('fade-out');
             frame.style.display = 'block';
@@ -484,7 +482,6 @@
           }
         }, 500);
 
-        // Extended fallback timeout to 15 seconds
         setTimeout(function() {
           if (!loaded) {
             clearInterval(checkNav);
